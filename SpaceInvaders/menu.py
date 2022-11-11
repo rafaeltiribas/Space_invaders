@@ -19,12 +19,7 @@ bgImg = GameImage("background.png")
 nave = Sprite("spaceship.png")
 nave.x = (win_width/2) - (nave.width/2)
 nave.y = win_height - nave.height
-velx = 300
-
-# Tiro
-tiro = Sprite("tiro.png")
-tiro.x = nave.x
-tiro.y = -100
+velx = 150
 vely = -300
 
 # Game Window
@@ -86,7 +81,7 @@ def main_menu():
         win.update()
 
 # Dificuldade
-dificuldadeJogo = 1
+dificuldadeJogo = 3
 def level_menu():
     while True:
 
@@ -97,7 +92,7 @@ def level_menu():
             dificuldadeJogo = 2
             main_menu()
         if (mouse.is_over_object(dificil) and mouse.is_button_pressed(1)):
-            dificuldadeJogo = 3
+            dificuldadeJogo = 1
             main_menu()
         bgImg.draw()
         facil.draw()
@@ -107,11 +102,64 @@ def level_menu():
 
 # Game
 def game_loop(velx, vely):
+
+    quantidadeNaves = 12
+    navesInimigas = []
+    navex = 250
+    navey = 100
+    tiros = []
+    navesCount = 0
+    cooldown = 550*dificuldadeJogo
+    enemyCooldown = 10
+    direcaox = 1
+
     while True:
         if(keyboard.key_pressed("esc") == True):
             exit()
 
+        # Naves Inimigas
+
+        while len(navesInimigas)<12:
+            navinha = Sprite("spaceship.png")
+            if navesCount > 3:
+                navey += 100
+                navex = 250
+                navesCount = 0
+
+            navinha.x = navex + 70
+            navex += 100
+            navinha.y = navey
+            navesInimigas.append(navinha)
+            navesCount += 1
+
+        # Movimento naves inimigas
+
+        enemyCooldown += 1
+        if(enemyCooldown == 50):
+            for navinha in navesInimigas:
+                if(direcaox == 1):
+                    if(navinha.x < win_width - 100):
+                        navinha.x += 1*direcaox
+                        enemyCooldown = 0
+                    else:
+                        for navinha in navesInimigas:
+                            navinha.y += 50
+                        direcaox = direcaox * -1
+                else:
+                    if (navinha.x > 100):
+                        navinha.x += 1 * direcaox
+                        enemyCooldown = 0
+                    else:
+                        for navinha in navesInimigas:
+                            navinha.y += 50
+                        direcaox = direcaox * -1
+                if(navinha.y == nave.y):
+                    main_menu()
+
+
+
         # Nave mexendo de um lado para o outro
+
         if (nave.x > win_width - nave.width):
             velx *= -1
             if (velx > 0):
@@ -121,19 +169,24 @@ def game_loop(velx, vely):
             if (velx < 0):
                 velx *= -1
         # Tiro
-        if(keyboard.key_pressed("SPACE") and tiro.y <= 0):
-            tiro.y = nave.y - nave.height
+        cooldown += 1
+        if(keyboard.key_pressed("SPACE") and cooldown >= 550*dificuldadeJogo):
+            tiro = Sprite("tiro.png")
             tiro.x = nave.x
-        if(tiro.y < 0):
-            tiro.y = -100
-
-        tiro.y += vely * win.delta_time()
-
+            tiro.y = nave.y - nave.height
+            tiros.append(tiro)
+            cooldown = 0
 
         nave.x += velx * win.delta_time()
         gbImg.draw()
+        for tiro in tiros:
+            tiro.y += vely * win.delta_time()
+            tiro.draw()
+            if tiro.y > win_height + 100:
+                tiros.remove(tiro)
+        for navinha in navesInimigas:
+            navinha.draw()
         nave.draw()
-        tiro.draw()
         gwin.update()
 
 
